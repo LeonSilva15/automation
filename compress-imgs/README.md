@@ -1,5 +1,7 @@
 # Compressing images script
-This script will resize all the images (jpeg, jpg and png) where it's located
+This script will resize all the images (jpeg, jpg and png) where it's located.
+
+The output will be new resized images with the same name leaded with an underscore.
 
 ## Prerequisits
 We use pillow for processing the images
