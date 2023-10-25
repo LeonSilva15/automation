@@ -1,67 +1,71 @@
-import sys
 import os
 import re
 import shutil
+import argparse
 
-def reduce_dataset( dataSetSize, directory, target_directory=None, file_types=[] ):
-    # Get the path to the directory
-    abs_path = os.path.abspath( directory )
-    # Get the specified directory name to work on
-    dir_name = abs_path.split( '/' )[ -1 ]
-    
-    # When no target dirctory was specified, create one by default
-    if not target_directory:
-        parent_path = '/'.join( abs_path.split( '/' )[ :-1 ] )
-        target_directory = parent_path + '/reduced_' + dir_name
-    
+def reduce_dataset( size, directory, target, types ):
     # Create the target directory if not exists
-    if( not os.path.isdir( target_directory ) ):
-        os.mkdir( target_directory )
+    if( not os.path.isdir( target ) ):
+        os.mkdir( target )
     
     # Copy the files to the reduced dataset directory
-    for root_dir, cur_dir, files in os.walk( directory ):
+    for root_dir, _, files in os.walk( directory ):
+        _target = target + root_dir.split( directory )[ 1 ]
         
-        # Create the target directory if not exists
-        _target_directory = target_directory + root_dir.split( abs_path )[ 1 ]
-        
-        if( not os.path.isdir( _target_directory ) ):
-            os.mkdir( _target_directory )
+        if( not os.path.isdir( _target ) ):
+            os.mkdir( _target )
             
         filtered_files = list( filter(
             lambda file: re.search(
-                '( {} )$'.format( '|'.join( file_types ) ),
+                '( {} )$'.format( '|'.join( types ) ),
                 file,
                 flags=re.IGNORECASE ),
                 files
             ) )
         
         # Copy at most the desired number of elements
-        copy_index = ( len( filtered_files ) // dataSetSize ) or 1
+        copy_index = ( len( filtered_files ) // size ) or 1
         count = 0
 
         for i in range( 0, len( filtered_files ), copy_index ):
             shutil.copyfile( root_dir + '/' + filtered_files[ i ],
-                _target_directory + '/' + filtered_files[ i ] )
+                _target + '/' + filtered_files[ i ] )
             
             # Avoid unprecission on dataset size
             count += 1
-            if( count >= dataSetSize ):
+            if( count >= size ):
                 break
 
 
 if __name__ == '__main__':
-    dataSetSize = 200
-    directory = './'
-    target_directory = None
-    file_types = [ 'jpeg', 'jpg', 'png' ]
+    parser = argparse.ArgumentParser()
 
-    if len( sys.argv ) > 1:
-        dataSetSize = int( sys.argv[ 1 ] )
-    if len( sys.argv ) > 2:
-        directory = sys.argv[ 2 ]
-    if len( sys.argv ) > 3:
-        target_directory = sys.argv[ 3 ]
-    if len( sys.argv ) > 4:
-        file_types = sys.argv[ 4 ].split(',')
+    parser.add_argument( '-size', '--size', help='Target dataset size', type=int, default=200 )
+    parser.add_argument( '-d', '--directory', help='Source directory', default='./' )
+    parser.add_argument( '-t', '--target', help='Target directory' )
+    parser.add_argument( '-types', '--types', help='File types', default=[ 'jpeg', 'jpg', 'png' ] )
 
-    reduce_dataset( dataSetSize, directory, target_directory, file_types )
+    args = vars( parser.parse_args() )
+
+    # Get the path to the directory
+    abs_path = os.path.abspath( args[ 'directory' ] )
+
+    # Get the specified directory name to work on
+    dir_name = abs_path.split( '/' )[ -1 ]
+    
+    # When no target dirctory was specified, create one by default
+    if not args[ 'target' ]:
+        parent_path = '/'.join( abs_path.split( '/' )[ :-1 ] )
+        target = parent_path + '/reduced_' + dir_name
+    else:
+        target = os.path.abspath( args[ 'target' ] )
+
+    args[ 'directory' ] = abs_path
+    args[ 'target' ] = target
+
+    print( 'Target dataset size: {} '.format( args[ 'size' ] ))
+    print( 'Source directory: {} '.format( args[ 'directory' ] ))
+    print( 'Target directory: {} '.format( args[ 'target' ] ))
+    print( 'File types: {} '.format( args[ 'types' ] ))
+
+    reduce_dataset( **args )
