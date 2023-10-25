@@ -40,10 +40,10 @@ def reduce_dataset( size, directory, target, types ):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
-    parser.add_argument( '-size', '--size', help='Target dataset size', type=int, default=200 )
+    parser.add_argument( '-s', '--size', help='Target dataset size', type=int, default=200 )
     parser.add_argument( '-d', '--directory', help='Source directory', default='./' )
     parser.add_argument( '-t', '--target', help='Target directory' )
-    parser.add_argument( '-types', '--types', help='File types', default=[ 'jpeg', 'jpg', 'png' ] )
+    parser.add_argument( '-ty', '--types', help='File types', default=[ 'jpeg', 'jpg', 'png' ] )
 
     args = vars( parser.parse_args() )
 
